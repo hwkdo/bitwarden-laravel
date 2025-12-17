@@ -4,7 +4,6 @@ namespace Hwkdo\BitwardenLaravel;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Hwkdo\BitwardenLaravel\Commands\BitwardenLaravelCommand;
 
 class BitwardenLaravelServiceProvider extends PackageServiceProvider
 {
@@ -20,6 +19,28 @@ class BitwardenLaravelServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasMigration('create_bitwarden_laravel_table')
-            ->hasCommand(BitwardenLaravelCommand::class);
+            ->hasMigration('create_bitwarden_access_tokens_table');
+    }
+
+    public function packageRegistered(): void
+    {
+        $this->app->singleton(\Hwkdo\BitwardenLaravel\Services\BitwardenTokenService::class, function ($app) {
+            return new \Hwkdo\BitwardenLaravel\Services\BitwardenTokenService(
+                $app->make(\Hwkdo\BitwardenLaravel\Services\BitwardenConfigService::class)
+            );
+        });
+
+        $this->app->singleton(\Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService::class, function ($app) {
+            return new \Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService(
+                $app->make(\Hwkdo\BitwardenLaravel\Services\BitwardenConfigService::class),
+                $app->make(\Hwkdo\BitwardenLaravel\Services\BitwardenTokenService::class)
+            );
+        });
+
+        $this->app->singleton(\Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService::class, function ($app) {
+            return new \Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService(
+                $app->make(\Hwkdo\BitwardenLaravel\Services\BitwardenConfigService::class)
+            );
+        });
     }
 }
