@@ -63,16 +63,19 @@ class BitwardenVaultApiService
                 $request = $request->asJson();
             }
 
-            // Bei GET/DELETE werden Query-Parameter als zweites Argument übergeben
-            // Bei POST/PUT/PATCH werden sie in die URL eingebaut
-            if (in_array($method, ['GET', 'DELETE'])) {
-                $response = $request->{strtolower($method)}($url, $queryParams);
+            // Bei GET werden Query-Parameter als zweites Argument übergeben
+            // Bei POST/PUT/PATCH/DELETE werden sie in die URL eingebaut
+            if ($method === 'GET') {
+                $response = $request->get($url, $queryParams);
             } else {
-                // Füge Query-Parameter zur URL hinzu für POST/PUT/PATCH
                 if (! empty($queryParams)) {
                     $url .= '?'.http_build_query($queryParams);
                 }
-                $response = $request->{strtolower($method)}($url, $data);
+
+                // Für DELETE senden wir standardmäßig keinen Body
+                $payload = in_array($method, ['POST', 'PUT', 'PATCH']) ? $data : [];
+
+                $response = $request->{strtolower($method)}($url, $payload);
             }
 
             if (! $response->successful()) {
@@ -157,7 +160,7 @@ class BitwardenVaultApiService
         $orgId = $organizationId ?? $this->getOrganizationId();
 
         return $this->makeRequest('GET', "/object/org-collection/{$collectionId}", [], [
-            'organizationId' => $orgId,
+            'organizationid' => $orgId,
         ]);
     }
 
@@ -172,7 +175,9 @@ class BitwardenVaultApiService
         $orgId = $organizationId ?? $this->getOrganizationId();
 
         $this->makeRequest('DELETE', "/object/org-collection/{$collectionId}", [], [
-            'organizationId' => $orgId,
+            // Query-Parameter muss lowercase sein, sonst antwortet die Vault API mit
+            // "`organizationid` options is required."
+            'organizationid' => $orgId,
         ]);
     }
 
@@ -186,7 +191,7 @@ class BitwardenVaultApiService
         $orgId = $organizationId ?? $this->getOrganizationId();
 
         return $this->makeRequest('GET', '/list/object/org-collections', [], [
-            'organizationId' => $orgId,
+            'organizationid' => $orgId,
         ]);
     }
 
@@ -212,7 +217,7 @@ class BitwardenVaultApiService
         $orgId = $organizationId ?? $this->getOrganizationId();
 
         return $this->makeRequest('GET', '/list/object/org-members', [], [
-            'organizationId' => $orgId,
+            'organizationid' => $orgId,
         ]);
     }
 
