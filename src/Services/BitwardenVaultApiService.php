@@ -46,8 +46,6 @@ class BitwardenVaultApiService
      * Führt eine HTTP-Anfrage an die Bitwarden Vault API aus.
      * Die Vault API benötigt keine Authentifizierung.
      *
-     * @param  string  $method
-     * @param  string  $endpoint
      * @param  array  $data  Body-Daten für POST/PUT/PATCH
      * @param  array  $queryParams  Query-Parameter für GET/DELETE
      */
@@ -121,7 +119,7 @@ class BitwardenVaultApiService
     public function createCollection(array $data, ?string $organizationId = null): array
     {
         $orgId = $organizationId ?? $this->getOrganizationId();
-        
+
         // organizationId muss sowohl im Body als auch als Query-Parameter vorhanden sein
         $data['organizationId'] = $orgId;
 
@@ -133,14 +131,13 @@ class BitwardenVaultApiService
     /**
      * Aktualisiert eine bestehende Collection über die Vault API.
      *
-     * @param  string  $collectionId
      * @param  array{name?: string, externalId?: string, groups?: array, users?: array}  $data
      * @param  string|null  $organizationId  Optional, wird automatisch aus Config geholt wenn nicht angegeben
      */
     public function updateCollection(string $collectionId, array $data, ?string $organizationId = null): array
     {
         $orgId = $organizationId ?? $this->getOrganizationId();
-        
+
         // organizationId muss sowohl im Body als auch als Query-Parameter vorhanden sein
         $data['organizationId'] = $orgId;
 
@@ -152,7 +149,6 @@ class BitwardenVaultApiService
     /**
      * Ruft eine einzelne Collection über die Vault API ab.
      *
-     * @param  string  $collectionId
      * @param  string|null  $organizationId  Optional, wird automatisch aus Config geholt wenn nicht angegeben
      */
     public function getCollection(string $collectionId, ?string $organizationId = null): array
@@ -167,7 +163,6 @@ class BitwardenVaultApiService
     /**
      * Löscht eine Collection über die Vault API.
      *
-     * @param  string  $collectionId
      * @param  string|null  $organizationId  Optional, wird automatisch aus Config geholt wenn nicht angegeben
      */
     public function deleteCollection(string $collectionId, ?string $organizationId = null): void
@@ -224,16 +219,35 @@ class BitwardenVaultApiService
     /**
      * Bestätigt ein Organisationsmitglied über die Vault API.
      *
-     * @param  string  $memberId
+     * Die Bitwarden CLI (`bw serve`) erwartet `organizationid` als Query-Parameter,
+     * nicht im Request-Body.
+     *
      * @param  string|null  $organizationId  Optional, wird automatisch aus Config geholt wenn nicht angegeben
      */
     public function confirmMember(string $memberId, ?string $organizationId = null): array
     {
         $orgId = $organizationId ?? $this->getOrganizationId();
 
-        return $this->makeRequest('POST', "/confirm/org-member/{$memberId}", [
-            'organizationId' => $orgId,
+        return $this->makeRequest('POST', "/confirm/org-member/{$memberId}", [], [
+            'organizationid' => $orgId,
         ]);
+    }
+
+    /**
+     * Stellt sicher, dass der Vault entsperrt ist (für Confirm und andere Org-Aktionen).
+     *
+     * @param  string|null  $password  Optional, sonst Config `vault_password`
+     */
+    public function ensureUnlocked(?string $password = null): void
+    {
+        $status = $this->getStatus();
+        $vaultStatus = data_get($status, 'data.template.status');
+
+        if ($vaultStatus === 'unlocked') {
+            return;
+        }
+
+        $this->unlock($password);
     }
 
     // ==================== Vault Management-Endpunkte ====================
@@ -284,4 +298,3 @@ class BitwardenVaultApiService
         ]);
     }
 }
-
