@@ -27,19 +27,11 @@ class BitwardenVaultApiService
     }
 
     /**
-     * Gibt die Organization ID zurück.
-     * Extrahiert die ID aus dem organization_api_client_id (ohne "organization." Präfix).
+     * Gibt die Organization ID zurück (Config/Settings oder Ableitung aus Client-ID).
      */
     protected function getOrganizationId(): string
     {
-        $clientId = config('bitwarden-laravel.organization_api_client_id', '');
-
-        // Entferne das "organization." Präfix falls vorhanden
-        if (str_starts_with($clientId, 'organization.')) {
-            return substr($clientId, strlen('organization.'));
-        }
-
-        return $clientId;
+        return $this->configService->getOrganizationId();
     }
 
     /**

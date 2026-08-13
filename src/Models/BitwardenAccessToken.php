@@ -41,4 +41,3 @@ class BitwardenAccessToken extends Model
             ->first();
     }
 }
-

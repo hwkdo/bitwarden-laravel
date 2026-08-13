@@ -109,15 +109,7 @@ class BitwardenTokenService
      */
     protected function getClientId(): string
     {
-        if ($this->configService->shouldUseIntranetAppSettings()) {
-            $settings = \Hwkdo\IntranetAppBitwarden\Models\IntranetAppBitwardenSettings::current();
-
-            if ($settings && $settings->settings) {
-                return $settings->settings->bitwardenOrganizationApiClientId ?? '';
-            }
-        }
-
-        return config('bitwarden-laravel.organization_api_client_id', '');
+        return $this->configService->getOrganizationApiClientId();
     }
 
     /**
@@ -125,15 +117,7 @@ class BitwardenTokenService
      */
     protected function getClientSecret(): string
     {
-        if ($this->configService->shouldUseIntranetAppSettings()) {
-            $settings = \Hwkdo\IntranetAppBitwarden\Models\IntranetAppBitwardenSettings::current();
-
-            if ($settings && $settings->settings) {
-                return $settings->settings->bitwardenOrganizationApiClientSecret ?? '';
-            }
-        }
-
-        return config('bitwarden-laravel.organization_api_client_secret', '');
+        return $this->configService->getOrganizationApiClientSecret();
     }
 
     /**
@@ -152,4 +136,3 @@ class BitwardenTokenService
         return $deviceId;
     }
 }
-

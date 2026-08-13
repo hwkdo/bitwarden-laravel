@@ -2,9 +2,9 @@
 
 namespace Hwkdo\BitwardenLaravel\Tests;
 
+use Hwkdo\BitwardenLaravel\BitwardenLaravelServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Hwkdo\BitwardenLaravel\BitwardenLaravelServiceProvider;
 
 class TestCase extends Orchestra
 {
