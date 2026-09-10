@@ -13,6 +13,7 @@ use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
 use Hwkdo\BitwardenLaravel\Services\BitwardenTokenService;
 use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
 use Hwkdo\BitwardenLaravel\Services\NativeOrgTokenService;
+use Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService;
 use Hwkdo\BitwardenLaravel\Services\VaultwardenAdminSession;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -53,6 +54,13 @@ class BitwardenLaravelServiceProvider extends PackageServiceProvider
         $this->app->singleton(VaultwardenAdminSession::class, function ($app) {
             return new VaultwardenAdminSession(
                 $app->make(BitwardenConfigService::class)
+            );
+        });
+
+        $this->app->singleton(VaultwardenAdminApiService::class, function ($app) {
+            return new VaultwardenAdminApiService(
+                $app->make(BitwardenConfigService::class),
+                $app->make(VaultwardenAdminSession::class),
             );
         });
 
