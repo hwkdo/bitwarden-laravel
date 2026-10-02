@@ -44,28 +44,15 @@ final class OrganizationMemberStatus
     }
 
     /**
-     * Confirm nötig bei:
-     * - Status Accepted (1), oder
-     * - Status Invited (0) mit gesetzter userId und hasMasterPassword (Vaultwarden-Quirk nach Registrierung).
+     * Confirm ist nur bei Status Accepted (1) möglich.
+     * Vaultwarden lehnt jeden anderen Status mit "User in invalid state" ab.
+     * Invited bleibt pending, auch wenn userId und hasMasterPassword gesetzt sind.
      *
      * @param  array<string, mixed>  $member
      */
     public static function needsConfirm(array $member): bool
     {
-        $status = self::status($member);
-
-        if ($status === self::ACCEPTED) {
-            return true;
-        }
-
-        if ($status !== self::INVITED) {
-            return false;
-        }
-
-        $userId = trim((string) ($member['userId'] ?? ''));
-        $hasMasterPassword = filter_var($member['hasMasterPassword'] ?? false, FILTER_VALIDATE_BOOLEAN);
-
-        return $userId !== '' && $hasMasterPassword;
+        return self::status($member) === self::ACCEPTED;
     }
 
     /**
