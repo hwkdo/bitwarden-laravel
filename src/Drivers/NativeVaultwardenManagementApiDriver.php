@@ -40,7 +40,7 @@ class NativeVaultwardenManagementApiDriver implements BitwardenManagementApiInte
      * @param  array<string, mixed>  $data
      * @return array<mixed>
      */
-    protected function makeOrgRequest(string $method, string $endpoint, array $data = []): array
+    protected function makeOrgRequest(string $method, string $endpoint, array $data = [], bool $withoutBody = false): array
     {
         $token = $this->tokenService->getToken();
         $url = $this->configService->getBaseUrl().'/'.ltrim($endpoint, '/');
@@ -48,11 +48,15 @@ class NativeVaultwardenManagementApiDriver implements BitwardenManagementApiInte
         try {
             $request = Http::withToken($token)->acceptJson();
 
-            if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
-                $request = $request->asJson();
-            }
+            if ($withoutBody) {
+                $response = $request->send($method, $url);
+            } else {
+                if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
+                    $request = $request->asJson();
+                }
 
-            $response = $request->{strtolower($method)}($url, $data);
+                $response = $request->{strtolower($method)}($url, $data);
+            }
 
             if (! $response->successful()) {
                 Log::error('Bitwarden Native Org API Request Failed', [
@@ -158,6 +162,11 @@ class NativeVaultwardenManagementApiDriver implements BitwardenManagementApiInte
         }
 
         return $this->makeOrgRequest('POST', $this->orgApiPath('users/invite'), $payload);
+    }
+
+    public function reinviteMember(string $memberId): void
+    {
+        $this->makeOrgRequest('POST', $this->orgApiPath("users/{$memberId}/reinvite"), withoutBody: true);
     }
 
     public function updateMember(string $memberId, array $data): array

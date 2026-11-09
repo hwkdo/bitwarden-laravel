@@ -8,6 +8,7 @@ use Hwkdo\BitwardenLaravel\Drivers\NativeVaultwardenManagementApiDriver;
 use Hwkdo\BitwardenLaravel\Drivers\PublicApiManagementApiDriver;
 use Hwkdo\BitwardenLaravel\Enums\ManagementApiDriver;
 use Hwkdo\BitwardenLaravel\Services\BitwardenConfigService;
+use Hwkdo\BitwardenLaravel\Services\BitwardenTokenService;
 use Hwkdo\BitwardenLaravel\Services\NativeOrgTokenService;
 use Hwkdo\BitwardenLaravel\Support\ApiResponseNormalizer;
 use Illuminate\Support\Facades\Http;
@@ -168,5 +169,48 @@ it('invites members via native org invite endpoint', function (): void {
             && $request['emails'] === ['a@example.com']
             && $request['type'] === 2
             && ! array_key_exists('permissions', $request->data());
+    });
+});
+
+it('reinvites a member via native org reinvite endpoint without a body', function (): void {
+    Http::fake([
+        'https://vw.example.com/api/organizations/org-1/users/member-1/reinvite' => Http::response([], 200),
+    ]);
+
+    $config = Mockery::mock(BitwardenConfigService::class);
+    $config->shouldReceive('getOrganizationId')->andReturn('org-1');
+    $config->shouldReceive('getBaseUrl')->andReturn('https://vw.example.com');
+
+    $token = Mockery::mock(NativeOrgTokenService::class);
+    $token->shouldReceive('getToken')->andReturn('test-token');
+
+    $driver = new NativeVaultwardenManagementApiDriver($config, $token);
+    $driver->reinviteMember('member-1');
+
+    Http::assertSent(function ($request): bool {
+        return $request->method() === 'POST'
+            && $request->url() === 'https://vw.example.com/api/organizations/org-1/users/member-1/reinvite'
+            && $request->body() === '';
+    });
+});
+
+it('reinvites a member via public api reinvite endpoint', function (): void {
+    Http::fake([
+        'https://vw.example.com/api/public/members/member-1/reinvite' => Http::response([], 200),
+    ]);
+
+    $config = Mockery::mock(BitwardenConfigService::class);
+    $config->shouldReceive('getApiUrl')->andReturn('https://vw.example.com/api/');
+
+    $token = Mockery::mock(BitwardenTokenService::class);
+    $token->shouldReceive('getToken')->andReturn('test-token');
+
+    $driver = new PublicApiManagementApiDriver($config, $token);
+    $driver->reinviteMember('member-1');
+
+    Http::assertSent(function ($request): bool {
+        return $request->method() === 'POST'
+            && $request->url() === 'https://vw.example.com/api/public/members/member-1/reinvite'
+            && $request->body() === '';
     });
 });

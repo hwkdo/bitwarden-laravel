@@ -56,6 +56,16 @@ final class OrganizationMemberStatus
     }
 
     /**
+     * Erneutes Senden der Einladung ist nur bei Status Invited möglich.
+     *
+     * @param  array<string, mixed>  $member
+     */
+    public static function canReinvite(array $member): bool
+    {
+        return self::status($member) === self::INVITED;
+    }
+
+    /**
      * @param  array<int, array<string, mixed>>|array<string, mixed>  $apiResponse
      * @return list<array<string, mixed>>
      */

@@ -79,6 +79,11 @@ class ManagementApiDriverProxy implements BitwardenManagementApiInterface
         return $this->driver()->inviteMembers($data);
     }
 
+    public function reinviteMember(string $memberId): void
+    {
+        $this->driver()->reinviteMember($memberId);
+    }
+
     public function updateMember(string $memberId, array $data): array
     {
         return $this->driver()->updateMember($memberId, $data);

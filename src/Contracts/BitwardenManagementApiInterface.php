@@ -58,6 +58,12 @@ interface BitwardenManagementApiInterface
     public function inviteMembers(array $data): array;
 
     /**
+     * Einladung für ein bestehendes Organisationsmitglied erneut senden.
+     * Nur sinnvoll bei Status Invited (0).
+     */
+    public function reinviteMember(string $memberId): void;
+
+    /**
      * @param  array{type?: string|int, accessAll?: bool, collections?: array, groups?: array}  $data
      * @return array<string, mixed>
      */

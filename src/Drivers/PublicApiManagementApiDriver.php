@@ -33,19 +33,23 @@ class PublicApiManagementApiDriver implements BitwardenManagementApiInterface
      * @param  array<string, mixed>  $data
      * @return array<mixed>
      */
-    protected function makeRequest(string $method, string $endpoint, array $data = []): array
+    protected function makeRequest(string $method, string $endpoint, array $data = [], bool $withoutBody = false): array
     {
         $token = $this->tokenService->getToken();
         $url = $this->getApiBaseUrl().ltrim($endpoint, '/');
 
         try {
-            $request = Http::withToken($token);
+            $request = Http::withToken($token)->acceptJson();
 
-            if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
-                $request = $request->asJson();
+            if ($withoutBody) {
+                $response = $request->send($method, $url);
+            } else {
+                if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
+                    $request = $request->asJson();
+                }
+
+                $response = $request->{strtolower($method)}($url, $data);
             }
-
-            $response = $request->{strtolower($method)}($url, $data);
 
             if (! $response->successful()) {
                 Log::error('Bitwarden Public API Request Failed', [
@@ -158,6 +162,11 @@ class PublicApiManagementApiDriver implements BitwardenManagementApiInterface
     public function inviteMembers(array $data): array
     {
         return $this->makeRequest('POST', '/public/members/invite', $data);
+    }
+
+    public function reinviteMember(string $memberId): void
+    {
+        $this->makeRequest('POST', "/public/members/{$memberId}/reinvite", withoutBody: true);
     }
 
     public function updateMember(string $memberId, array $data): array

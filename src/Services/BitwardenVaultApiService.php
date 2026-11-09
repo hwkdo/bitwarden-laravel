@@ -242,6 +242,40 @@ class BitwardenVaultApiService
         $this->unlock($password);
     }
 
+    // ==================== Items (Vault API) ====================
+
+    /**
+     * @return array<mixed>
+     */
+    public function listItems(?string $collectionId = null): array
+    {
+        $query = [];
+
+        if ($collectionId !== null && $collectionId !== '') {
+            $query['collectionId'] = $collectionId;
+        }
+
+        return $this->makeRequest('GET', '/list/object/items', [], $query);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
+     */
+    public function createItem(array $data): array
+    {
+        return $this->makeRequest('POST', '/object/item', $data);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
+     */
+    public function updateItem(string $itemId, array $data): array
+    {
+        return $this->makeRequest('PUT', '/object/item/'.$itemId, $data);
+    }
+
     // ==================== Vault Management-Endpunkte ====================
 
     /**
